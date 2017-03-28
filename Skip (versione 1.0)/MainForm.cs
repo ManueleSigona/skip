@@ -71,7 +71,7 @@ namespace Skip
         int num_tastiere, num_righe, num_colonne; // numero tastiere, numero righe (tasti), numero colonne (tasti)
         int prima_riga, ultima_riga, prima_colonna, ultima_colonna; // area tastiera ortogonale (a partire da 0)
         int num_righe_complOrt, num_colonne_complOrt; // numero righe e colonne su cui fare compl ort
-        Tastiera[] tastiere; // le tastiere (bisogna creare la classe tastiera, che deve contenere i tasti)
+        List<Tastiera> tastiere = new List<Tastiera>(); // le tastiere (bisogna creare la classe tastiera, che deve contenere i tasti)
         bool completamentoOrt = true; // se usare o no il completamento ortogonale
         int num_completamento; // il numero di tasti da inserire nel completamento ortogonale
         // ---------------------------------------------
@@ -1483,10 +1483,10 @@ namespace Skip
                                 num_righe = Convert.ToInt32(dati[1]);
                                 num_colonne = Convert.ToInt32(dati[2]);
                                 // Bisogna creare la classe tastiera
-                                tastiere = new Tastiera[num_tastiere];
+                                //tastiere = new Tastiera[num_tastiere];
                                 for (int i = 0; i < num_tastiere; i++)
                                 { // creiamo tutte le tastiere (per adesso non avranno ancora tasti dentro)
-                                    tastiere[i] = new Tastiera(num_righe, num_colonne);
+                                    tastiere.Add(new Tastiera(num_righe, num_colonne));
                                 }
                             }
                             catch
@@ -1494,6 +1494,7 @@ namespace Skip
                                 err = true;
                             }
                         }
+                        //tastiere.
                         if (cont == 12)
                         {
                             try
@@ -1530,7 +1531,9 @@ namespace Skip
                                     {
                                         // TODO: istanziare nuovo tasto passandogli cosa deve esserci scritto (tastiLetti[j]) e la posizione (dipenderà da i e da j)
                                         // bisogna prima creare la classe TastoRettangolare
-                                        tastiere[k].tasti[i, j] = nuovoTasto; //aggiungiamo alla tastiera corrente il nuovo tasto appena creato
+
+                                        //tastiere[k].tasti[i, j] = nuovoTasto; //aggiungiamo alla tastiera corrente il nuovo tasto appena creato
+                                        tastiere[k].aggiungiTasto(new Tasto(i, j, tastiLetti[j]));
                                     }
                                 }
                                 k++; // finito di riempire una tastiera, al prossimo giro dobbiamo riempire la prossima
