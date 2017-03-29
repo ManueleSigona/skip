@@ -29,8 +29,7 @@ namespace Globals
         public static string Collab_text = "";
 
         public static string ApplicationData_text = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        public static string EastLab_text = "EAST-Lab";
-        public static string CartellaLocale_text = Path.Combine(ApplicationData_text, EastLab_text, Programma_text);
+        public static string CartellaLocale_text = Path.Combine(ApplicationData_text, Programma_text);
 
         public static string Licenza_text = "LICENZA FREEWARE - Questo programma software è distribuito gratuitamente per uso personale e non commerciale, ed è rilasciato così com'è, senza garanzie di alcun tipo, esplicite o implicite (incluse, senza limitazioni, le garanzie implicite di buona qualita ed idoneita ad un uso specifico). Tutti i rischi derivanti dal funzionamento o dal mancato funzionamento del programma software sono a carico dell'Utente.  In nessun caso gli Autori potranno essere considerati responsabili per qualsiasi danno diretto o indiretto di qualsiasi tipo (inclusi, senza limitazioni, danni per perdita di profitti, di interruzione di servizi, perdite di dati, o ogni altra perdita pecuniaria) derivanti dall'utilizzo o dalla impossibilita di utilizzo del programma software, anche se gli Autori sono stati avvisati sulla possibilita che si verifichino questi danni.  Installando, copiando o utilizzando in qualsiasi modo il programma software l'Utente accetta implicitamente ed in tutte le loro parti le suddette condizioni.";
 

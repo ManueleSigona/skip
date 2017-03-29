@@ -15,6 +15,7 @@ namespace Skip
         public static int yDimension;
         public string contenuto;
         public List<Tasto> completamento;
+        public bool haCompletamento = false;
         public enum Stato { Attivo, Premuto }
         public Stato stato;
         public enum TipoTasto { Ortogonale, Riga, Colonna, Altro, Completamento }
@@ -80,6 +81,7 @@ namespace Skip
         // aggiunge a questo tasto il completamento da visualizzare quando è selezionato
         public void aggiungiCompletamento(string[] tasti)
         {
+            haCompletamento = true;
             // l'ordine dei tasti nel completamento sarà il seguente:
             // 1    2   3
             // 4    5   6

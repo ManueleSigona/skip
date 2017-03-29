@@ -188,6 +188,8 @@ namespace Skip
 
             bitmap.Dispose();
 
+            Load += new EventHandler(MainForm_Load);
+
             //-------------------------------------------------
         }
 
@@ -289,10 +291,10 @@ namespace Skip
         // -------------------------------------------------
 
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
 
-            leggiConfigurazione("prova.cfg"); // leggi configurazione e tastiera
+            leggiConfigurazione("configurazione.cfg"); // leggi configurazione e tastiera
 
             textBox1.Text = "Tp: " + tempoPreselezione.ToString() + " ms";
             textBox2.Text = "Ta: " + tempoAttivazione.ToString() + " ms";
@@ -377,8 +379,9 @@ namespace Skip
 
             try
             {
-
-                StreamReader leggi = new StreamReader(File.OpenRead(Path.Combine(Glob.CartellaLocale_text, s)));
+                //string path = Path.Combine(Glob.CartellaLocale_text, s);
+                string path = "..\\..\\..\\" + s; // supponiamo di avere il file di configurazione nella cartella "iniziale" del progetto (dove c'è Skip.sln)
+                StreamReader leggi = new StreamReader(File.OpenRead(path));
                 string riga = "";
                 while (!leggi.EndOfStream)
                 {
@@ -617,7 +620,8 @@ namespace Skip
                                         }
                                         string[] tastiOrtLetti = rigaLetta.Split('\t');
                                         // istanzio nuovo complet ort e lo assegno al tasto corrispondente
-                                        tastiere[k].matriceTasti[prima_riga + i, prima_colonna + j].aggiungiCompletamento(tastiOrtLetti);
+                                        if (tastiOrtLetti.Length > 1) // se il completamento è definito per questo tasto
+                                            tastiere[k].matriceTasti[prima_riga + i, prima_colonna + j].aggiungiCompletamento(tastiOrtLetti);
                                     }
                                 }
                                 k++; // finito di riempire una tastiera, al prossimo giro dobbiamo riempire la prossima

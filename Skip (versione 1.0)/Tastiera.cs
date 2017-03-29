@@ -10,7 +10,7 @@ namespace Skip
         public int numColonne;
         //pensavo di creare una struttura (matrice array o lista) di tasti che contenga i tasti della specifica tastiera
         public Tasto[,] matriceTasti;
-        public List<Tasto> listaTasti;
+        public List<Tasto> listaTasti = new List<Tasto>();
         public int origineX, origineY; // la posizione assoluta della tastiera nella form
 
         public Font font;
