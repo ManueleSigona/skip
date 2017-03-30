@@ -189,6 +189,7 @@ namespace Skip
             bitmap.Dispose();
 
             Load += new EventHandler(MainForm_Load);
+            Paint += new PaintEventHandler(panel1_Paint);
 
             //-------------------------------------------------
         }
@@ -395,7 +396,7 @@ namespace Skip
                             try
                             {
                                 string[] dati = rigaLetta.Split(',');
-                                fontTasto = new Font(dati[0], Convert.ToSingle(dati[1]), GraphicsUnit.Point);
+                                fontTasto = new Font(dati[0], Convert.ToSingle(dati[1]), FontStyle.Bold);
                             }
                             catch
                             {
@@ -549,7 +550,7 @@ namespace Skip
                             try
                             {
                                 int xCentro, yCentro; // coordinate assolute nella form del tasto letto
-                                for (int i = 0; i < num_righe - 1; i++) // leggiamo riga per riga la tastiera
+                                for (int i = 0; i < num_righe; i++) // leggiamo riga per riga la tastiera
                                 {
                                     if (i != 0) // bisogna leggere la riga successiva (tranne la prima volta)
                                     {
@@ -565,11 +566,25 @@ namespace Skip
                                         xCentro = tastiere[k].origineX + j * Tasto.xDimension + Tasto.xDimension / 2; // coord centro = offset + (j + 0.5) volte la dimensione del tasto
                                         yCentro = tastiere[k].origineY + i * Tasto.yDimension + Tasto.yDimension / 2; // coord centro = offset + (i + 0.5) volte la dimensione del tasto
                                         //-----------------------------------------------------
-                                        tastiere[k].matriceTasti[i, j] = new Tasto(i, j, tastiLetti[j], xCentro, yCentro); //aggiungiamo alla tastiera corrente il nuovo tasto appena creato
-                                        tastiere[k].aggiungiTasto(new Tasto(i, j, tastiLetti[j], xCentro, yCentro));
+                                        // -------------- che tipo di tasto è? ----------------
+                                        Tasto.TipoTasto tipo;
+                                        if ((i < prima_riga || i > ultima_riga) || (j < prima_colonna || j > ultima_colonna))
+                                            tipo = Tasto.TipoTasto.Altro; // sono i tasti non facenti parte dell'area ortogonale
+                                        else if (i == prima_riga && j == prima_colonna)
+                                            tipo = Tasto.TipoTasto.Altro; // è l'intersezione di prima riga e prima colonna (è vuoto)
+                                        else if (i == prima_riga)
+                                            tipo = Tasto.TipoTasto.Riga; // i tasti riga del completamento
+                                        else if (j == prima_colonna)
+                                            tipo = Tasto.TipoTasto.Colonna; // i tasti colonna del completamento
+                                        else
+                                            tipo = Tasto.TipoTasto.Ortogonale; // i rimanenti sono quelli nell'area ortogonale
+                                        //-----------------------------------------------------
+                                        tastiere[k].matriceTasti[i, j] = new Tasto(i, j, tastiLetti[j], xCentro, yCentro, tipo, tastiere[k]); //aggiungiamo alla tastiera corrente il nuovo tasto appena creato
+                                        tastiere[k].aggiungiTasto(new Tasto(i, j, tastiLetti[j], xCentro, yCentro, tipo, tastiere[k]));
                                         // TODO: in realtà l'ultima riga della tastiera è da gestire in modo diverso, a causa delle dimensioni diverse dei tasti...
                                     }
                                 }
+                                tastiere[k].aggiungiTastiSpeciali(); // aggiunge l'ultima riga di tasti (sono uguali per tutte le tastiere)
                                 k++; // finito di riempire una tastiera, al prossimo giro dobbiamo riempire la prossima
                             }
                             catch

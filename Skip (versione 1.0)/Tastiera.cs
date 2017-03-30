@@ -11,6 +11,7 @@ namespace Skip
         //pensavo di creare una struttura (matrice array o lista) di tasti che contenga i tasti della specifica tastiera
         public Tasto[,] matriceTasti;
         public List<Tasto> listaTasti = new List<Tasto>();
+        public List<Tasto> tastSpeciali = new List<Tasto>();
         public int origineX, origineY; // la posizione assoluta della tastiera nella form
 
         public Font font;
@@ -27,13 +28,45 @@ namespace Skip
             this.numRighe = righe;
             this.numColonne = colonne;
             matriceTasti = new Tasto[righe, colonne];
-            origineX = 10; // valori di prova
-            origineY = 40;
+            origineX = 50; // valori di prova
+            origineY = 100;
             font = f;
         }
         public void aggiungiTasto(Tasto tasto)
         {
             this.listaTasti.Add(tasto);
+        }
+
+        public void aggiungiTastiSpeciali()
+        {
+            int xCentro, yCentro;
+            // la yCentro sarà la stessa per tutti i tasti speciali, invece la xCentro sarà diversa
+            yCentro = matriceTasti[numRighe - 1, 0].yCentro + Tasto.yDimension; // prendiamo la y dell'ultima riga di tasti e la "abbassiamo" della dimensione di un tasto
+            xCentro = origineX + Tasto.xDimension;
+            Tasto SHIFT = new Tasto("SHIFT", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension); // la larghezza (xDim) è doppia rispetto ai tasti normali
+            xCentro += Tasto.xDimension * 2;
+            Tasto FR = new Tasto("FR", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 2;
+            Tasto CF = new Tasto("CF", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 2;
+            Tasto CR = new Tasto("CR", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 3;
+            Tasto SPACE = new Tasto(" ", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 4, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 3;
+            Tasto DEL = new Tasto("DEL", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 2;
+            Tasto P_DEL = new Tasto("P-DEL", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            xCentro += Tasto.xDimension * 2;
+            Tasto INVIO = new Tasto("INVIO", xCentro, yCentro, Tasto.TipoTasto.Altro, this, Tasto.xDimension * 2, Tasto.yDimension);
+            // non rimane che aggiungerli alla lista apposita
+            tastSpeciali.Add(SHIFT);
+            tastSpeciali.Add(FR);
+            tastSpeciali.Add(CF);
+            tastSpeciali.Add(CR);
+            tastSpeciali.Add(SPACE);
+            tastSpeciali.Add(DEL);
+            tastSpeciali.Add(P_DEL);
+            tastSpeciali.Add(INVIO);
         }
 
         public void disegnaTastiera(Graphics graphics, Color orth_fg_col, Color orth_bg_col, Color rorth_fg_col, Color rorth_bg_col, Color corth_fg_col, Color corth_bg_col, Color other_fg_col, Color other_bg_col, Color indic_col, Color presel0_col, Color presel1_col)
@@ -75,8 +108,18 @@ namespace Skip
                     posizioneTesto.X = matriceTasti[i,j].xCentro - (dimensioneTesto.Width / 2);
                     posizioneTesto.Y = matriceTasti[i, j].yCentro - (dimensioneTesto.Height / 2);
                     graphics.DrawString(matriceTasti[i, j].contenuto, font, new SolidBrush(coloreTesto), posizioneTesto);
-                    graphics.DrawPath(new Pen(Color.Black, 2), matriceTasti[i, j].perimetro); // disegna il contorno del tasto
+                    graphics.DrawPath(new Pen(Color.Black, 1), matriceTasti[i, j].perimetro); // disegna il contorno del tasto
                 }
+            }
+            // rimangono da disegnare i tasti speciali
+            foreach (Tasto t in tastSpeciali)
+            {
+                dimensioneTesto = graphics.MeasureString(t.contenuto, font);
+                graphics.FillPath(new SolidBrush(other_bg_col), t.perimetro); // riempie lo sfondo del tasto
+                posizioneTesto.X = t.xCentro - (dimensioneTesto.Width / 2);
+                posizioneTesto.Y = t.yCentro - (dimensioneTesto.Height / 2);
+                graphics.DrawString(t.contenuto, font, new SolidBrush(other_fg_col), posizioneTesto);
+                graphics.DrawPath(new Pen(Color.Black, 1), t.perimetro); // disegna il contorno del tasto
             }
         }
     }
