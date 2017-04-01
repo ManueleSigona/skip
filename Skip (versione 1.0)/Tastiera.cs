@@ -69,7 +69,7 @@ namespace Skip
             tastSpeciali.Add(INVIO);
         }
 
-        public void disegnaTastiera(Graphics graphics, Color orth_fg_col, Color orth_bg_col, Color rorth_fg_col, Color rorth_bg_col, Color corth_fg_col, Color corth_bg_col, Color other_fg_col, Color other_bg_col, Color indic_col, Color presel0_col, Color presel1_col)
+        public void disegnaTastiera(Graphics graphics, Color orth_fg_col, Color orth_bg_col, Color rorth_fg_col, Color rorth_bg_col, Color corth_fg_col, Color corth_bg_col, Color other_fg_col, Color other_bg_col, Color indic_col, Color presel0_col, Color presel1_col, int completamentoi, int completamentoj)
         {
             SizeF dimensioneTesto; // dimensione del testo da scrivere sul tasto
             PointF posizioneTesto = new PointF(); // dove scrivere il testo sul tasto
@@ -120,6 +120,19 @@ namespace Skip
                 posizioneTesto.Y = t.yCentro - (dimensioneTesto.Height / 2);
                 graphics.DrawString(t.contenuto, font, new SolidBrush(other_fg_col), posizioneTesto);
                 graphics.DrawPath(new Pen(Color.Black, 1), t.perimetro); // disegna il contorno del tasto
+            }
+            // bisogna vedere se c'è un tasto con relativo completamento da disegnare:
+            if (completamentoi != -1 && completamentoj != -1)
+            {
+                foreach (Tasto tCompl in matriceTasti[completamentoi, completamentoj].completamento)
+                {
+                    dimensioneTesto = graphics.MeasureString(tCompl.contenuto, font);
+                    graphics.FillPath(new SolidBrush(presel0_col), tCompl.perimetro); // riempie lo sfondo del tasto
+                    posizioneTesto.X = tCompl.xCentro - (dimensioneTesto.Width / 2);
+                    posizioneTesto.Y = tCompl.yCentro - (dimensioneTesto.Height / 2);
+                    graphics.DrawString(tCompl.contenuto, font, new SolidBrush(orth_fg_col), posizioneTesto);
+                    graphics.DrawPath(new Pen(Color.Black, 1), tCompl.perimetro); // disegna il contorno del tasto
+                }
             }
         }
     }

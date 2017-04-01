@@ -76,6 +76,7 @@ namespace Skip
         int num_completamento; // il numero di tasti da inserire nel completamento ortogonale
 
         int tastieraCorrente = 0; // la tastiera corrente da visualizzare
+        int completamentoI = -1, completamentoJ = -1; // di quale tasto mostrare il completamento
         // ---------------------------------------------
 
 
@@ -189,7 +190,7 @@ namespace Skip
             bitmap.Dispose();
 
             Load += new EventHandler(MainForm_Load);
-            Paint += new PaintEventHandler(panel1_Paint);
+            panel1.Paint += new PaintEventHandler(panel1_Paint);
 
             //-------------------------------------------------
         }
@@ -345,8 +346,8 @@ namespace Skip
 
         private void panel1_Paint(object sender, PaintEventArgs e)      //panel: oggetto grafico invisibile ke permette di inserire facilmente altri controlli
         {
-            tastiere[tastieraCorrente].disegnaTastiera(panel1.CreateGraphics(), orth_fg_col, orth_bg_col, rorth_fg_col, rorth_bg_col,
-                corth_fg_col, corth_bg_col, other_fg_col, other_bg_col, indic_col, presel0_col, presel1_col);
+            tastiere[tastieraCorrente].disegnaTastiera(e.Graphics, orth_fg_col, orth_bg_col, rorth_fg_col, rorth_bg_col,
+                corth_fg_col, corth_bg_col, other_fg_col, other_bg_col, indic_col, presel0_col, presel1_col, completamentoI, completamentoJ);
         }
 
 
@@ -636,7 +637,10 @@ namespace Skip
                                         string[] tastiOrtLetti = rigaLetta.Split('\t');
                                         // istanzio nuovo complet ort e lo assegno al tasto corrispondente
                                         if (tastiOrtLetti.Length > 1) // se il completamento è definito per questo tasto
+                                        {
                                             tastiere[k].matriceTasti[prima_riga + i, prima_colonna + j].aggiungiCompletamento(tastiOrtLetti);
+                                            tastiere[k].matriceTasti[prima_riga + i, prima_colonna + j].haCompletamento = true;
+                                        }
                                     }
                                 }
                                 k++; // finito di riempire una tastiera, al prossimo giro dobbiamo riempire la prossima
@@ -760,7 +764,143 @@ namespace Skip
 
         void panel1_MouseClick(object sender, MouseEventArgs e)
         {
-          
+            if (e.Button == MouseButtons.Left)
+            {
+                int savedI = 0;
+                int savedJ = 0;
+                string tastoCliccato = "";
+                bool clickValido = false;
+
+                if (completamentoI == -1 && completamentoJ == -1)
+                { // cerchiamo tra i tasti normali, non c'è un menu completamento attivo
+                    for (int i = 0; i < num_righe; i++)
+                    {
+                        for (int j = 0; j < num_colonne; j++)
+                        {
+                            if (tastiere[tastieraCorrente].matriceTasti[i, j].perimetro.IsVisible(e.Location))
+                            { // il punto dove ha cliccato è all'interno di questo tasto
+                                tastoCliccato = tastiere[tastieraCorrente].matriceTasti[i, j].contenuto;
+                                savedI = i;
+                                savedJ = j;
+                                clickValido = true;
+                                break;
+                            }
+                        }
+                        if (clickValido)
+                            break;
+                    }
+                    if (clickValido)
+                    {
+                        if (tastiere[tastieraCorrente].matriceTasti[savedI, savedJ].haCompletamento)
+                        { // allora dobbiamo mostrare il suo menu di completamento
+                            completamentoI = savedI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
+                            completamentoJ = savedJ;
+                            panel1.Refresh(); // fa ridisegnare la tastiera
+                        }
+                        else
+                        { // altrimenti è un tasto senza completamento => bisogna scriverlo in output
+                            if (aggancio != handleTastiera)
+                            {
+                                foreach (char c in tastoCliccato)
+                                {
+                                    Thread.Sleep(Glob.Sleep_TIME);
+                                    SendKeys.SendWait(c.ToString());
+                                    Thread.Sleep(Glob.Sleep_TIME);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                { // altrimenti vuol dire che è attivo un menu completamento
+                  // dunque prima guardiamo se è stato cliccato un tasto del menu:
+                    bool cliccatoCompletamento = false;
+                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                    {
+                        if (t.perimetro.IsVisible(e.Location))
+                        { // è stato cliccato proprio uno dei tasti del menu completamento
+                            tastoCliccato = t.contenuto;
+                            cliccatoCompletamento = true;
+                            break;
+                        }
+                    }
+                    if (cliccatoCompletamento)
+                    { // bisogna scrivere in uscita il tasto premuto
+                        if (aggancio != handleTastiera)
+                        {
+                            foreach (char c in tastoCliccato)
+                            {
+                                Thread.Sleep(Glob.Sleep_TIME);
+                                SendKeys.SendWait(c.ToString());
+                                Thread.Sleep(Glob.Sleep_TIME);
+                            }
+                        }
+                        completamentoI = -1; // chiudiamo il menu
+                        completamentoJ = -1;
+                        panel1.Refresh();
+                    }
+                    else
+                    { // allora un menu completamento è aperto, ma è stato cliccato qualcos'altro:
+                        for (int i = 0; i < num_righe; i++)
+                        {
+                            for (int j = 0; j < num_colonne; j++)
+                            {
+                                if (tastiere[tastieraCorrente].matriceTasti[i, j].perimetro.IsVisible(e.Location))
+                                { // il punto dove ha cliccato è all'interno di questo tasto
+                                    tastoCliccato = tastiere[tastieraCorrente].matriceTasti[i, j].contenuto;
+                                    savedI = i;
+                                    savedJ = j;
+                                    clickValido = true;
+                                    break;
+                                }
+                            }
+                            if (clickValido)
+                                break;
+                        }
+                        if (clickValido)
+                        {
+                            if (tastiere[tastieraCorrente].matriceTasti[savedI, savedJ].haCompletamento)
+                            { // allora dobbiamo mostrare il suo menu di completamento
+                                completamentoI = savedI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
+                                completamentoJ = savedJ;
+                                panel1.Refresh(); // fa ridisegnare la tastiera
+                            }
+                            else
+                            { // altrimenti è un tasto senza completamento => bisogna scriverlo in output
+                                if (aggancio != handleTastiera)
+                                {
+                                    foreach (char c in tastoCliccato)
+                                    {
+                                        Thread.Sleep(Glob.Sleep_TIME);
+                                        SendKeys.SendWait(c.ToString());
+                                        Thread.Sleep(Glob.Sleep_TIME);
+                                    }
+                                }
+                                completamentoI = -1; // chiudiamo il menu
+                                completamentoJ = -1;
+                                panel1.Refresh();
+                            }
+                        }
+                    }
+                }
+                // proviamo a cercare tra i tasti speciali (ultima riga di tasti)
+                foreach (Tasto tSpeciale in tastiere[tastieraCorrente].tastSpeciali)
+                {
+                    if (tSpeciale.perimetro.IsVisible(e.Location))
+                    { // il punto dove ha cliccato è all'interno di questo tasto
+                        tastoCliccato = tSpeciale.contenuto;
+                        clickValido = true;
+                        break;
+                    }
+                }
+                if (clickValido)
+                { // è stato premuto un tasto speciale... Cosa fare?
+                    switch (tastoCliccato)
+                    {
+                        // TODO!
+                    }
+                }
+            }
         }
 
 
