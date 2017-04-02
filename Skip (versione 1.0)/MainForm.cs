@@ -77,13 +77,12 @@ namespace Skip
 
         int tastieraCorrente = 0; // la tastiera corrente da visualizzare
         int completamentoI = -1, completamentoJ = -1; // di quale tasto mostrare il completamento
+        bool flagShift = false;
+        int num_ultima_sillaba = 0;
+        bool flagLock = false;
         // ---------------------------------------------
 
 
-        Point posizioneMouse;
-        BufferedGraphicsContext myContext;
-        BufferedGraphics myBuffer;
-        int tastoDaAttivare = 0;
         Color coloreBackground, coloreTastoInattivo, coloreTastoTemporaneo, coloreTastoAttivo;
         Color colconfig1, colconfig2;
 
@@ -102,48 +101,14 @@ namespace Skip
         Font fontTasto;
         int tempoPreselezione;
         int tempoAttivazione;
-        int numTasti;       // num dei tasti esagonali
 
-        int getSettore;     // servono per la nuova modifica di curat
-        int getTraccia;
-
-        int indice = 0;
         IntPtr aggancio = IntPtr.Zero;      // rappresenta un handle inizializz a 0
         public enum Modalita { zeroClick, unClick, touch }     // perchè Modalita.zeroClick restituisce 0 mentre Modalita.unClick = 1
         public Modalita modalita;
-        int tracciaCorrente, settoreCorrente, tracciaSalvata, settoreSalvato;
-        string psillabaCorrente, psillabaSalvata;
         System.Timers.Timer timer1 = new System.Timers.Timer();
         System.Timers.Timer timer2 = new System.Timers.Timer();
         IntPtr handleTastiera;
-        int numTastiRotondi;
-        int indiceRotondi = 0;
-        int tastoRotondoDaAttivare = 0;
-        string carattereSalvato, carattereCorrente;
 
-        int numTastiRettangolari;
-        string coloreTestoMobile = "red"; //XYXYXY e uso 
-        string coloreTestoTrasp = "black";  //XYXYXY e uso
-
-        //int indiceSpace = 0;        // serviva solam quando c erano 2 tasti spazio in leggiConfig
-        int tastoSpaceDaAttivare = 0;
-
-        int indiceTastiRettangolari = 0;
-
-        int tastoBackSpaceDaAttivare = 0;
-
-        int tastoInvioDaAttivare = 0;
-      // servira come il tasto lock a chiamare metodi come perimetro o testo dei tasti shift
-        int tastoShiftDaAttivare = 0;
-
-        int tastoLockDaAttivare = 0;
-
-        bool flagshift = false;
-        bool flaglock = false;
-        SizeF dimensionetestoShift;
-        PointF posizioneTestoShift;
-        SizeF dimensionetestoLock;
-        PointF posizioneTestoLock;
         int cont_c1 = 0;
         int cont_c2 = 0;
         int cont_c3 = 0;
@@ -153,9 +118,6 @@ namespace Skip
         int cont_v3 = 0;
 
         static Cursor cur;  // sta var serve a portare il cursore custom in tasti esag e nelle altre classi (con 1 metodo)
-
-
-        int numeroTracce = 0;       //PROVA per vedere se si sbaglia a vedere la pos del mouse nelle tracce anke qui (usato in "leggi config" e in "VisualTasto"
 
         bool change = false;
 
@@ -309,9 +271,6 @@ namespace Skip
             this.menuStrip1.ForeColor = colorfontmenu;
 
 
-            indice = 0;
-            indiceRotondi = 0;
-            indiceTastiRettangolari = 0;
             Glob.poslettere = Convert.ToInt32(Glob.poslettere * defzoom);
             if (Glob.wina > System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height * 0.35 && Glob.winl > System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width * 0.35)
             {
@@ -344,8 +303,63 @@ namespace Skip
         // -------------------------------------------------
 
 
-        private void panel1_Paint(object sender, PaintEventArgs e)      //panel: oggetto grafico invisibile ke permette di inserire facilmente altri controlli
+        private void panel1_Paint(object sender, PaintEventArgs e)
         {
+            if (flagLock)
+            { // il tasto lock è attivo => tutti maiuscoli
+                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
+                {
+                    for (int j = 0; j < num_colonne; j++)
+                    {
+                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToUpper();
+                    }
+                }
+                if (completamentoI != -1 && completamentoJ != -1)
+                { // rendiamo maiuscoli anche i tasti del completamento aperto
+                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                        t.contenuto = t.contenuto.ToUpper();
+                }
+            }
+            else if (flagShift)
+            { // allora tutti i tasti devono avere la prima lettera maiuscola
+                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
+                {
+                    for (int j = 0; j < num_colonne; j++)
+                    {
+                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                        {
+                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0].ToString().ToUpper() + tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.Substring(1).ToString().ToLower();
+                        }
+                    }
+                }
+                if (completamentoI != -1 && completamentoJ != -1)
+                { // mettiamo la maiuscola anche nei tasti del completamento aperto
+                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                        t.contenuto = t.contenuto[0].ToString().ToUpper() + t.contenuto.Substring(1).ToString().ToLower();
+                }
+            }
+            else
+            { // allora dobbiamo far tornare i tasti normali
+                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
+                {
+                    for (int j = 0; j < num_colonne; j++)
+                    {
+                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                        {
+                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToLower();
+                        }
+                    }
+                }
+                if (completamentoI != -1 && completamentoJ != -1)
+                { // facciamo tornare normali anche i tasti del completamento aperto
+                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                        t.contenuto = t.contenuto.ToLower();
+                }
+            }
             tastiere[tastieraCorrente].disegnaTastiera(e.Graphics, orth_fg_col, orth_bg_col, rorth_fg_col, rorth_bg_col,
                 corth_fg_col, corth_bg_col, other_fg_col, other_bg_col, indic_col, presel0_col, presel1_col, completamentoI, completamentoJ);
         }
@@ -729,18 +743,6 @@ namespace Skip
                     this.clickMouseToolStripMenuItem.BackColor = colormenuattivo;
                     this.clickMouseToolStripMenuItem1.BackColor = colormenu;
                 }
-
-            if (numTasti != indice)
-            {
-                MessageBox.Show(ForegroundWindow.Instance, "Il numero di tasti esaogonali dichiarato nella tastiera non corrisponde al numero di tasti correttamente descritti!", "Errore nel file di configurazione", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                chiudi = true;
-            }
-
-            if (numTastiRotondi != indiceRotondi)
-            {
-                MessageBox.Show(ForegroundWindow.Instance, "Il numero di tasti rotondi dichiarato nella tastiera non corrisponde al numero di tasti correttamente descritti!", "Errore nel file di configurazione", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                chiudi = true;
-            }
             TopMost = true;
 
             if (chiudi == true)
@@ -798,16 +800,30 @@ namespace Skip
                             panel1.Refresh(); // fa ridisegnare la tastiera
                         }
                         else
-                        { // altrimenti è un tasto senza completamento => bisogna scriverlo in output
-                            if (aggancio != handleTastiera)
+                        { // è LOCK, TAB, o un tasto normale?
+                            if (tastoCliccato == "LOCK")
+                            {
+                                flagLock = !flagLock; // invertiamo il flag
+                                panel1.Refresh();
+                            }
+                            else if (tastoCliccato == "TAB")
+                            {
+                                if (aggancio != handleTastiera)
+                                    SendKeys.Send("{TAB}");
+                            }
+                            // altrimenti è un tasto normale senza completamento => bisogna scriverlo in output
+                            else if (aggancio != handleTastiera)
                             {
                                 foreach (char c in tastoCliccato)
                                 {
-                                    Thread.Sleep(Glob.Sleep_TIME);
-                                    SendKeys.SendWait(c.ToString());
-                                    Thread.Sleep(Glob.Sleep_TIME);
+                                    //Thread.Sleep(Glob.Sleep_TIME);
+                                    SendKeys.Send(c.ToString());
+                                    //Thread.Sleep(Glob.Sleep_TIME);
                                 }
+                                flagShift = false;
+                                num_ultima_sillaba = tastoCliccato.Length;
                             }
+                            panel1.Refresh();
                         }
                     }
                 }
@@ -830,10 +846,12 @@ namespace Skip
                         {
                             foreach (char c in tastoCliccato)
                             {
-                                Thread.Sleep(Glob.Sleep_TIME);
-                                SendKeys.SendWait(c.ToString());
-                                Thread.Sleep(Glob.Sleep_TIME);
+                                //Thread.Sleep(Glob.Sleep_TIME);
+                                SendKeys.Send(c.ToString());
+                                //Thread.Sleep(Glob.Sleep_TIME);
                             }
+                            flagShift = false;
+                            num_ultima_sillaba = tastoCliccato.Length;
                         }
                         completamentoI = -1; // chiudiamo il menu
                         completamentoJ = -1;
@@ -871,10 +889,12 @@ namespace Skip
                                 {
                                     foreach (char c in tastoCliccato)
                                     {
-                                        Thread.Sleep(Glob.Sleep_TIME);
-                                        SendKeys.SendWait(c.ToString());
-                                        Thread.Sleep(Glob.Sleep_TIME);
+                                        //Thread.Sleep(Glob.Sleep_TIME);
+                                        SendKeys.Send(c.ToString());
+                                        //Thread.Sleep(Glob.Sleep_TIME);
                                     }
+                                    flagShift = false;
+                                    num_ultima_sillaba = tastoCliccato.Length;
                                 }
                                 completamentoI = -1; // chiudiamo il menu
                                 completamentoJ = -1;
@@ -883,6 +903,7 @@ namespace Skip
                         }
                     }
                 }
+                clickValido = false;
                 // proviamo a cercare tra i tasti speciali (ultima riga di tasti)
                 foreach (Tasto tSpeciale in tastiere[tastieraCorrente].tastSpeciali)
                 {
@@ -897,7 +918,47 @@ namespace Skip
                 { // è stato premuto un tasto speciale... Cosa fare?
                     switch (tastoCliccato)
                     {
-                        // TODO!
+                        case "SHIFT":
+                            flagShift = true;
+                            panel1.Refresh();
+                            break;
+                        case "FR":
+                            tastieraCorrente = tastieraCorrente == 1 ? 0 : 1;
+                            panel1.Refresh();
+                            break;
+                        case "CF":
+                            tastieraCorrente = tastieraCorrente == 2 ? 0 : 2;
+                            panel1.Refresh();
+                            break;
+                        case "CR":
+                            tastieraCorrente = tastieraCorrente == 3 ? 0 : 3;
+                            panel1.Refresh();
+                            break;
+                        case " ": // SPACE
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            SendKeys.Send(" ");
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            break;
+                        case "DEL":
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            SendKeys.Send("{BACKSPACE}");
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            break;
+                        case "P-DEL":
+                            for (int i = 0; i < num_ultima_sillaba; i++)
+                            { // cancelliamo tutta l'ultima sillaba inserita
+                                //Thread.Sleep(Glob.Sleep_TIME);
+                                SendKeys.Send("{BACKSPACE}");
+                                //Thread.Sleep(Glob.Sleep_TIME);
+                            }
+                            break;
+                        case "INVIO":
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            SendKeys.Send("{ENTER}");
+                            //Thread.Sleep(Glob.Sleep_TIME);
+                            break;
+                        default:
+                            break;
                     }
                 }
             }
