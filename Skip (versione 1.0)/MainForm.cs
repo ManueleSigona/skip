@@ -1,6 +1,6 @@
 ﻿// *************************************************
 //
-//        HEX (v1.1) Ultime modifiche: 19.03.2012
+//        SKIP (v1.0) Ultime modifiche: 03.04.2017
 //
 // *************************************************
 
@@ -19,8 +19,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 
 using Globals;
-
-
+using System.Diagnostics;
 
 namespace Skip
 {
@@ -80,6 +79,8 @@ namespace Skip
         bool flagShift = false;
         int num_ultima_sillaba = 0;
         bool flagLock = false;
+
+        int oldI = -1, oldJ = -1;
         // ---------------------------------------------
 
 
@@ -109,17 +110,7 @@ namespace Skip
         System.Timers.Timer timer2 = new System.Timers.Timer();
         IntPtr handleTastiera;
 
-        int cont_c1 = 0;
-        int cont_c2 = 0;
-        int cont_c3 = 0;
-
-        int cont_v1 = 0;
-        int cont_v2 = 0;
-        int cont_v3 = 0;
-
         static Cursor cur;  // sta var serve a portare il cursore custom in tasti esag e nelle altre classi (con 1 metodo)
-
-        bool change = false;
 
         //Windows management message constants
         const int WS_EX_NOACTIVATE = 0x08000000;
@@ -128,6 +119,7 @@ namespace Skip
         //Previous selected window handle pointer
         IntPtr selectedWindow;
         float defzoom = 1;
+
         // -------------------------------------------------
         //	salvataggio dell'handle della form
         // -------------------------------------------------
@@ -150,6 +142,17 @@ namespace Skip
             cur = this.Cursor;
 
             bitmap.Dispose();
+
+            esciToolStripMenuItem.Click += new EventHandler(esciToolStripMenuItem_Click);
+            clickMouseToolStripMenuItem.Click += new EventHandler(clickMouseToolStripMenuItem_Click);
+            clickMouseToolStripMenuItem1.Click += new EventHandler(clickMouseToolStripMenuItem1_Click);
+            touchToolStripMenuItem1.Click += new EventHandler(touchToolStripMenuItem1_Click);
+            ToolStripMenuItem.Click += new EventHandler(ToolStripMenuItem_Click);
+
+            button1.Click += new EventHandler(button1_Click);
+            button2.Click += new EventHandler(button2_Click);
+            button3.Click += new EventHandler(button3_Click);
+            button4.Click += new EventHandler(button4_Click);
 
             Load += new EventHandler(MainForm_Load);
             panel1.Paint += new PaintEventHandler(panel1_Paint);
@@ -235,20 +238,6 @@ namespace Skip
         }
 
 
-
-        // -------------------------------------------------
-        //	timer per gestire il tempo di preselezione, si occupa di 
-        //	controllare lo stato di tutti i tasti presenti nella tastiera
-        // -------------------------------------------------
-
-
-        void timer1_Elapsed(object sender, ElapsedEventArgs e)
-        {
-                  
-        }
-
-
-
         // -------------------------------------------------
         //	operazioni da eseguire al caricamento della form, 
         //	PRIMO EVENTO SOLLEVATO
@@ -262,10 +251,14 @@ namespace Skip
 
             textBox1.Text = "Tp: " + tempoPreselezione.ToString() + " ms";
             textBox2.Text = "Ta: " + tempoAttivazione.ToString() + " ms";
-            timer1.Elapsed += new ElapsedEventHandler(timer1_Elapsed);  // genera l'evento ogni 2000 ms (dal file config)
+            timer1.Elapsed += new ElapsedEventHandler(timer1_Elapsed);
             timer2.Elapsed += new ElapsedEventHandler(timer2_Elapsed);
+            panel1.MouseMove += new MouseEventHandler(panel1_MouseMove);
             //this.LostFocus += new EventHandler(Form1_LostFocus);    //gestisce il cambio di foregroundWindow (finestra in primo piano)
             TopMost = true;
+            colormenu = Color.FromName(Glob.coloreBackgroundMenu);
+            colormenuattivo = Color.FromName(Glob.coloreTastoAttivoMenu);
+            colorfontmenu = Color.FromName(Glob.coloreForegroundTestoMenu);
             this.menuStrip1.BackColor = colormenu;
             this.menuStrip1.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.menuStrip1.ForeColor = colorfontmenu;
@@ -284,25 +277,10 @@ namespace Skip
             }
         }
 
-
-
-        // -------------------------------------------------
-        //	ritorna il color font
-        // -------------------------------------------------
-
-        public static Color getColoreFont()
-        {
-            return coloreFont;
-        }
-
-
-
         // -------------------------------------------------
         //	l'evento paint è sollevato ogni volta che 
         //	si vuole ridisegnare la form
         // -------------------------------------------------
-
-
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
             if (flagLock)
@@ -362,21 +340,6 @@ namespace Skip
             }
             tastiere[tastieraCorrente].disegnaTastiera(e.Graphics, orth_fg_col, orth_bg_col, rorth_fg_col, rorth_bg_col,
                 corth_fg_col, corth_bg_col, other_fg_col, other_bg_col, indic_col, presel0_col, presel1_col, completamentoI, completamentoJ);
-        }
-
-
-
-        // -------------------------------------------------
-        //	a seconda della posizione del puntatore e dello stato 
-        //	dei tasti viene gestita la funzionalita della tastiera,
-        //	utilizata da tutti i metodi ModificaTasto,gestisce tutti g
-        //	li stati,deformaz esagonali
-        // -------------------------------------------------
-
-
-        private void panel1_MouseMove(object sender, MouseEventArgs e)
-        {
-
         }
 
         // -------------------------------------------------
@@ -749,15 +712,116 @@ namespace Skip
                 Close();
         }
 
+
+        // -------------------------------------------------
+        //	timer per gestire il tempo di preselezione, si occupa di 
+        //	controllare lo stato di tutti i tasti presenti nella tastiera
+        // -------------------------------------------------
+        void timer1_Elapsed(object sender, ElapsedEventArgs e)
+        {  // l'unica cosa da fare quando il timer1 "scade" è aprire il menu completamento del tasto
+            if (tastiere[tastieraCorrente].matriceTasti[oldI, oldJ].haCompletamento)
+            { // allora dobbiamo mostrare il suo menu di completamento
+                completamentoI = oldI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
+                completamentoJ = oldJ;
+                Invoke(new MethodInvoker(delegate { panel1.Refresh(); })); // fa ridisegnare la tastiera
+                // (usiamo l'invoke per far sì che il refresh venga chiamato nel giusto thread, altrimenti lancerebbe un'eccezione)
+            }
+        }
+
+
         // -------------------------------------------------
         //	secondo timer per gestire la modalita zero-click
         // -------------------------------------------------
 
         void timer2_Elapsed(object sender, ElapsedEventArgs e)
         {
-          
+          // TODO
         }
 
+
+        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            int savedI = 0;
+            int savedJ = 0;
+            bool posValida = false;
+            if (completamentoI == -1 && completamentoJ == -1)
+            { // cerchiamo tra i tasti normali, non c'è un menu completamento attivo
+                for (int i = 0; i < num_righe; i++)
+                {
+                    for (int j = 0; j < num_colonne; j++)
+                    {
+                        if (tastiere[tastieraCorrente].matriceTasti[i, j].perimetro.IsVisible(e.Location))
+                        { // il punto dove si trova il mouse è su questo tasto
+                          // adesso ci sono due possibilità:
+                          // - siamo ancora sullo stesso tasto dell'ultima volta che è stata chiamata questa funzione;
+                          // - siamo su un nuovo tasto
+                            if (oldI != i || oldJ != j)
+                            { // siamo su un tasto diverso dall'ultima volta
+                                oldI = i;
+                                oldJ = j;
+                                timer1.Stop();
+                                timer1.Start(); // azzeriamo e facciamo ripartire il timer1
+                            }
+                            // se siamo sullo stesso tasto di prima non dobbiamo fare niente (il timer starà andando avanti)
+                            posValida = true;
+                            savedI = i;
+                            savedJ = j;
+                            break;
+                        }
+                    }
+                    if (posValida)
+                        break;
+                }
+            }
+            else
+            { // altrimenti vuol dire che è attivo un menu completamento
+              // dunque prima guardiamo se il mouse è sopra un tasto del menu:
+                bool sopraCompletamento = false;
+                foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                {
+                    if (t.perimetro.IsVisible(e.Location) || t.perimetro.IsOutlineVisible(e.Location, new Pen(Color.Black, 1))) // IsOutlineVisible serve perchè altrimenti dava problemi quando il mouse si trovava esattamente sul bordo tra due tasti adiacenti
+                    { // il mouse è sopra uno dei tasti del menu completamento
+                        sopraCompletamento = true;
+                        break;
+                    }
+                }
+                if (!sopraCompletamento)
+                { // allora un menu completamento è aperto, ma il mouse è sopra qualcos'altro:
+                  // allora prima di tutto chiudiamo il menu di completamento aperto
+                    completamentoI = -1;
+                    completamentoJ = -1;
+                    panel1.Refresh();
+                    for (int i = 0; i < num_righe; i++)
+                    {
+                        for (int j = 0; j < num_colonne; j++)
+                        {
+                            if (tastiere[tastieraCorrente].matriceTasti[i, j].perimetro.IsVisible(e.Location))
+                            { // il punto dove si trova il mouse è su questo tasto
+                              // adesso ci sono due possibilità:
+                              // - siamo ancora sullo stesso tasto dell'ultima volta che è stata chiamata questa funzione;
+                              // - siamo su un nuovo tasto
+                                if (oldI != i || oldJ != j)
+                                { // siamo su un tasto diverso dall'ultima volta
+                                    oldI = i;
+                                    oldJ = j;
+                                    timer1.Stop();
+                                    timer1.Start(); // azzeriamo e facciamo ripartire il timer1
+                                }
+                                // se siamo sullo stesso tasto di prima non dobbiamo fare niente (il timer starà andando avanti)
+                                posValida = true;
+                                savedI = i;
+                                savedJ = j;
+                                break;
+                            }
+                        }
+                        if (posValida)
+                            break;
+                    }
+                }
+                else // se il mouse è sopra il menu completamento allora non serve il timer (in modalità 1-click)
+                    timer1.Stop();
+            }
+        }
 
 
         // -------------------------------------------------
@@ -793,36 +857,23 @@ namespace Skip
                     }
                     if (clickValido)
                     {
-                        if (tastiere[tastieraCorrente].matriceTasti[savedI, savedJ].haCompletamento)
-                        { // allora dobbiamo mostrare il suo menu di completamento
-                            completamentoI = savedI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
-                            completamentoJ = savedJ;
-                            panel1.Refresh(); // fa ridisegnare la tastiera
+                        // è LOCK, TAB, o un tasto normale?
+                        if (tastoCliccato == "LOCK")
+                        {
+                            flagLock = !flagLock; // invertiamo il flag
+                            panel1.Refresh();
                         }
-                        else
-                        { // è LOCK, TAB, o un tasto normale?
-                            if (tastoCliccato == "LOCK")
-                            {
-                                flagLock = !flagLock; // invertiamo il flag
-                                panel1.Refresh();
-                            }
-                            else if (tastoCliccato == "TAB")
-                            {
-                                if (aggancio != handleTastiera)
-                                    SendKeys.Send("{TAB}");
-                            }
-                            // altrimenti è un tasto normale senza completamento => bisogna scriverlo in output
-                            else if (aggancio != handleTastiera)
-                            {
-                                foreach (char c in tastoCliccato)
-                                {
-                                    //Thread.Sleep(Glob.Sleep_TIME);
-                                    SendKeys.Send(c.ToString());
-                                    //Thread.Sleep(Glob.Sleep_TIME);
-                                }
-                                flagShift = false;
-                                num_ultima_sillaba = tastoCliccato.Length;
-                            }
+                        else if (tastoCliccato == "TAB")
+                        {
+                            if (aggancio != handleTastiera)
+                                SendKeys.Send("{TAB}");
+                        }
+                        // altrimenti è un tasto normale => bisogna scriverlo in output
+                        else if (aggancio != handleTastiera)
+                        {
+                            SendKeys.Send(tastoCliccato);
+                            flagShift = false;
+                            num_ultima_sillaba = tastoCliccato.Length;
                             panel1.Refresh();
                         }
                     }
@@ -844,62 +895,12 @@ namespace Skip
                     { // bisogna scrivere in uscita il tasto premuto
                         if (aggancio != handleTastiera)
                         {
-                            foreach (char c in tastoCliccato)
-                            {
-                                //Thread.Sleep(Glob.Sleep_TIME);
-                                SendKeys.Send(c.ToString());
-                                //Thread.Sleep(Glob.Sleep_TIME);
-                            }
+                            SendKeys.Send(tastoCliccato);
                             flagShift = false;
                             num_ultima_sillaba = tastoCliccato.Length;
-                        }
-                        completamentoI = -1; // chiudiamo il menu
-                        completamentoJ = -1;
-                        panel1.Refresh();
-                    }
-                    else
-                    { // allora un menu completamento è aperto, ma è stato cliccato qualcos'altro:
-                        for (int i = 0; i < num_righe; i++)
-                        {
-                            for (int j = 0; j < num_colonne; j++)
-                            {
-                                if (tastiere[tastieraCorrente].matriceTasti[i, j].perimetro.IsVisible(e.Location))
-                                { // il punto dove ha cliccato è all'interno di questo tasto
-                                    tastoCliccato = tastiere[tastieraCorrente].matriceTasti[i, j].contenuto;
-                                    savedI = i;
-                                    savedJ = j;
-                                    clickValido = true;
-                                    break;
-                                }
-                            }
-                            if (clickValido)
-                                break;
-                        }
-                        if (clickValido)
-                        {
-                            if (tastiere[tastieraCorrente].matriceTasti[savedI, savedJ].haCompletamento)
-                            { // allora dobbiamo mostrare il suo menu di completamento
-                                completamentoI = savedI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
-                                completamentoJ = savedJ;
-                                panel1.Refresh(); // fa ridisegnare la tastiera
-                            }
-                            else
-                            { // altrimenti è un tasto senza completamento => bisogna scriverlo in output
-                                if (aggancio != handleTastiera)
-                                {
-                                    foreach (char c in tastoCliccato)
-                                    {
-                                        //Thread.Sleep(Glob.Sleep_TIME);
-                                        SendKeys.Send(c.ToString());
-                                        //Thread.Sleep(Glob.Sleep_TIME);
-                                    }
-                                    flagShift = false;
-                                    num_ultima_sillaba = tastoCliccato.Length;
-                                }
-                                completamentoI = -1; // chiudiamo il menu
-                                completamentoJ = -1;
-                                panel1.Refresh();
-                            }
+                            completamentoI = -1; // chiudiamo il menu
+                            completamentoJ = -1;
+                            panel1.Refresh();
                         }
                     }
                 }
@@ -935,77 +936,24 @@ namespace Skip
                             panel1.Refresh();
                             break;
                         case " ": // SPACE
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             SendKeys.Send(" ");
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             break;
                         case "DEL":
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             SendKeys.Send("{BACKSPACE}");
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             break;
                         case "P-DEL":
                             for (int i = 0; i < num_ultima_sillaba; i++)
                             { // cancelliamo tutta l'ultima sillaba inserita
-                                //Thread.Sleep(Glob.Sleep_TIME);
                                 SendKeys.Send("{BACKSPACE}");
-                                //Thread.Sleep(Glob.Sleep_TIME);
                             }
                             break;
                         case "INVIO":
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             SendKeys.Send("{ENTER}");
-                            //Thread.Sleep(Glob.Sleep_TIME);
                             break;
                         default:
                             break;
                     }
                 }
-            }
-        }
-
-
-        // -------------------------------------------------
-        //	salvataggio su file delle statistiche alla fine
-        // -------------------------------------------------
-
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            StreamWriter sw = new StreamWriter("statistiche.txt");
-            sw.Write("Pseudo-sillabe consonantiche formate da un carattere: ");
-            sw.WriteLine(Convert.ToString(cont_c1));
-            sw.Write("Pseudo-sillabe consonantiche formate da due caratteri: ");
-            sw.WriteLine(Convert.ToString(cont_c2));
-            sw.Write("Pseudo-sillabe consonantiche formate da tre caratteri: ");
-            sw.WriteLine(Convert.ToString(cont_c3));
-            sw.Write("Pseudo-sillabe vocaliche formate da un carattere: ");
-            sw.WriteLine(Convert.ToString(cont_v1));
-            sw.Write("Pseudo-sillabe vocaliche formate da due caratteri: ");
-            sw.WriteLine(Convert.ToString(cont_v2));
-            sw.Write("Pseudo-sillabe vocaliche formate da tre caratteri: ");
-            sw.WriteLine(Convert.ToString(cont_v3));
-            sw.Close();
-
-
-            if (change)
-            {
-                //MessageBox.Show(ForegroundWindow.Instance, "Aggiornato il file config con le impostazioni correnti", "Aggiornamento config", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                if (modalita == Modalita.zeroClick)
-                    Glob.modalitaAttuazione = "0";
-                if (modalita == Modalita.unClick)
-                    Glob.modalitaAttuazione = "1";
-                if (modalita == Modalita.touch)
-                    Glob.modalitaAttuazione = "2";
-
-                if (flagTriangoliDinamici == 0)
-                    Glob.visualizzaTriangoli = "0";
-                if (flagTriangoliDinamici == 1)
-                    Glob.visualizzaTriangoli = "1";
-
-                if (defzoom > 0.96 && defzoom < 1.03)
-                    defzoom = 1;
-                Glob.defzoom = Convert.ToString(defzoom);
             }
         }
 
@@ -1016,89 +964,78 @@ namespace Skip
             Application.Exit();
         }
 
-        private void zoomToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void zoomToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void clickMouseToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
+        { // viene chiamato quando viene cliccato il tasto del menù in alto "0 click"
+            modalita = Modalita.zeroClick;
+            this.touchToolStripMenuItem1.BackColor = colormenu;
+            this.clickMouseToolStripMenuItem1.BackColor = colormenu;
+            this.clickMouseToolStripMenuItem.BackColor = colormenuattivo;
         }
-
         private void clickMouseToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-
+        { // viene chiamato quando viene cliccato il tasto del menù in alto "1 click"
+            modalita = Modalita.unClick;
+            this.touchToolStripMenuItem1.BackColor = colormenu;
+            this.clickMouseToolStripMenuItem1.BackColor = colormenuattivo;
+            this.clickMouseToolStripMenuItem.BackColor = colormenu;
         }
-
-
-        private void touchToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //MessageBox.Show(ForegroundWindow.Instance, ".......", "About...", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-
-        }
-
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
+        private void touchToolStripMenuItem1_Click(object sender, EventArgs e)
+        { // viene chiamato quando viene cliccato il tasto del menù in alto "Touch"
+            modalita = Modalita.touch;
+            this.touchToolStripMenuItem1.BackColor = colormenuattivo;
+            this.clickMouseToolStripMenuItem1.BackColor = colormenu;
+            this.clickMouseToolStripMenuItem.BackColor = colormenu;
         }
 
         private void ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-        }
-
-        private void modificaToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void touchToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-
+            //Info win_info = new Info();
+            //win_info.ShowDialog();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-
+            if (tempoPreselezione > 100)
+            {
+                tempoPreselezione = tempoPreselezione - 50;
+                timer1.Interval = tempoPreselezione;
+                textBox1.Text = "Tp: " + tempoPreselezione.ToString() + " ms";
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-
+            if (tempoPreselezione < 9949)
+            {
+                tempoPreselezione = tempoPreselezione + 50;
+                timer1.Interval = tempoPreselezione;
+                textBox1.Text = "Tp: " + tempoPreselezione.ToString() + " ms";
+            }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-
+            if (tempoAttivazione > 100)
+            {
+                tempoAttivazione = tempoAttivazione - 50;
+                timer2.Interval = tempoAttivazione;
+                textBox2.Text = "Ta: " + tempoAttivazione.ToString() + " ms";
+            }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-
+            if (tempoAttivazione < 9949)
+            {
+                tempoAttivazione = tempoAttivazione + 50;
+                timer2.Interval = tempoAttivazione;
+                textBox2.Text = "Ta: " + tempoAttivazione.ToString() + " ms";
+            }
         }
-
-
-
     }
-
-
-
     // =================================================
     //	Class ForegroundWindow 
     //	recupero finestra in primo piano
     // =================================================
-
     public class ForegroundWindow : IWin32Window
     {
         private static ForegroundWindow _window = new ForegroundWindow();

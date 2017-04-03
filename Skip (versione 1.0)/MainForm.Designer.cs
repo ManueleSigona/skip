@@ -29,13 +29,10 @@
         private void InitializeComponent()
         {
             this.ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zoomToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.touchToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.clickMouseToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.clickMouseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.modificaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.esciToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.button4 = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
@@ -55,12 +52,6 @@
             this.ToolStripMenuItem.Size = new System.Drawing.Size(29, 25);
             this.ToolStripMenuItem.Text = "&?";
             // 
-            // zoomToolStripMenuItem1
-            // 
-            this.zoomToolStripMenuItem1.Name = "zoomToolStripMenuItem1";
-            this.zoomToolStripMenuItem1.Size = new System.Drawing.Size(73, 25);
-            this.zoomToolStripMenuItem1.Text = "Zoom -";
-            // 
             // touchToolStripMenuItem1
             // 
             this.touchToolStripMenuItem1.Name = "touchToolStripMenuItem1";
@@ -79,23 +70,11 @@
             this.clickMouseToolStripMenuItem.Size = new System.Drawing.Size(65, 25);
             this.clickMouseToolStripMenuItem.Text = "0 click";
             // 
-            // modificaToolStripMenuItem
-            // 
-            this.modificaToolStripMenuItem.Name = "modificaToolStripMenuItem";
-            this.modificaToolStripMenuItem.Size = new System.Drawing.Size(124, 25);
-            this.modificaToolStripMenuItem.Text = "Visualizza aree";
-            // 
             // esciToolStripMenuItem
             // 
             this.esciToolStripMenuItem.Name = "esciToolStripMenuItem";
             this.esciToolStripMenuItem.Size = new System.Drawing.Size(106, 26);
             this.esciToolStripMenuItem.Text = "Esci";
-            // 
-            // zoomToolStripMenuItem
-            // 
-            this.zoomToolStripMenuItem.Name = "zoomToolStripMenuItem";
-            this.zoomToolStripMenuItem.Size = new System.Drawing.Size(78, 25);
-            this.zoomToolStripMenuItem.Text = "Zoom +";
             // 
             // fileToolStripMenuItem
             // 
@@ -166,12 +145,9 @@
             this.menuStrip1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.modificaToolStripMenuItem,
             this.clickMouseToolStripMenuItem,
             this.clickMouseToolStripMenuItem1,
             this.touchToolStripMenuItem1,
-            this.zoomToolStripMenuItem1,
-            this.zoomToolStripMenuItem,
             this.ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -218,13 +194,10 @@
         #endregion
 
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem zoomToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem touchToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem clickMouseToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem clickMouseToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem modificaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem esciToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem zoomToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.TextBox textBox2;
