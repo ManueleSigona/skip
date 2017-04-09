@@ -104,6 +104,8 @@ namespace Skip
                             coloreTesto = Color.Black;
                             break;
                     }
+                    if (matriceTasti[i, j].stato == Tasto.Stato.Attivo)
+                        coloreSfondo = indic_col;
                     graphics.FillPath(new SolidBrush(coloreSfondo), matriceTasti[i, j].perimetro); // riempie lo sfondo del tasto
                     posizioneTesto.X = matriceTasti[i,j].xCentro - (dimensioneTesto.Width / 2);
                     posizioneTesto.Y = matriceTasti[i, j].yCentro - (dimensioneTesto.Height / 2);

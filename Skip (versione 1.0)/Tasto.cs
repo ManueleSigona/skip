@@ -17,7 +17,7 @@ namespace Skip
         public string contenuto;
         public List<Tasto> completamento;
         public bool haCompletamento = false;
-        public enum Stato { Attivo, Premuto }
+        public enum Stato { Inattivo, Attivo } // Inattivo: pronto; Attivo: il mouse è sopra
         public Stato stato;
         public enum TipoTasto { Ortogonale, Riga, Colonna, Altro, Completamento }
         public TipoTasto tipo;
@@ -33,7 +33,7 @@ namespace Skip
             yDimension = 0;
             this.contenuto = "";
             completamento = new List<Tasto>();
-            stato = Stato.Attivo;
+            stato = Stato.Inattivo;
         }
         public Tasto(int x, int y)
         {
@@ -43,7 +43,7 @@ namespace Skip
             yDimension = 0;
             this.contenuto = "";
             completamento = new List<Tasto>();
-            stato = Stato.Attivo;
+            stato = Stato.Inattivo;
         }
         public Tasto(int x, int y, string tasto)
         {
@@ -51,7 +51,7 @@ namespace Skip
             this.relPosY = y;
             this.contenuto = tasto;
             completamento = new List<Tasto>();
-            stato = Stato.Attivo;
+            stato = Stato.Inattivo;
             vertici = new Point[4];
             perimetro = new GraphicsPath();
         }
@@ -62,7 +62,7 @@ namespace Skip
             this.relPosY = y;
             this.contenuto = tasto;
             completamento = new List<Tasto>();
-            stato = Stato.Attivo;
+            stato = Stato.Inattivo;
             vertici = new Point[4];
             perimetro = new GraphicsPath();
             vertici[0] = new Point(xCentro - xDimension / 2, yCentro - yDimension / 2); // vertice in alto a sx
@@ -83,7 +83,7 @@ namespace Skip
         {
             this.contenuto = tasto;
             completamento = new List<Tasto>();
-            stato = Stato.Attivo;
+            stato = Stato.Inattivo;
             vertici = new Point[4];
             perimetro = new GraphicsPath();
             vertici[0] = new Point(xCentro - xDim / 2, yCentro - yDim / 2); // vertice in alto a sx
