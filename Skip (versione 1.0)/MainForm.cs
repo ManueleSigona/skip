@@ -23,11 +23,6 @@ using System.Diagnostics;
 
 namespace Skip
 {
-    // ma come vengono gestiti gli eventi??  In particolare i primi 2 eventi sollevati all'inizio del progr sono:
-    // 1)L'EVENTO LOAD sollevato quando l'utente carica la form principale
-    // 2)L'EVENTO PAINT sollevato ogni volta che occorre ridisegn la form
-
-
     public struct IconInfo  // sta struct serve per il custom cursor
     {
         public bool fIcon;
@@ -79,8 +74,10 @@ namespace Skip
         bool flagShift = false;
         int num_ultima_sillaba = 0;
         bool flagLock = false;
+        bool flagChange = false;
 
-        int oldI = -1, oldJ = -1;
+        int oldI = 0, oldJ = 0; // posizioni i e j dell'ultima volta in cui è stata chiamata mouse move
+        string oldCompl = ""; // posizioni i e j sul completamento aperto dell'ultima volta in cui è stata chiamata mouse move
         // ---------------------------------------------
 
 
@@ -283,59 +280,63 @@ namespace Skip
         // -------------------------------------------------
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
-            if (flagLock)
-            { // il tasto lock è attivo => tutti maiuscoli
-                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
-                {
-                    for (int j = 0; j < num_colonne; j++)
+            if (flagChange) // ci dice se c'è qualcosa da cambiare nei tasti
+            {
+                flagChange = false;
+                if (flagLock)
+                { // il tasto lock è attivo => tutti maiuscoli
+                    for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
                     {
-                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
-                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
-                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToUpper();
-                    }
-                }
-                if (completamentoI != -1 && completamentoJ != -1)
-                { // rendiamo maiuscoli anche i tasti del completamento aperto
-                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
-                        t.contenuto = t.contenuto.ToUpper();
-                }
-            }
-            else if (flagShift)
-            { // allora tutti i tasti devono avere la prima lettera maiuscola
-                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
-                {
-                    for (int j = 0; j < num_colonne; j++)
-                    {
-                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                        for (int j = 0; j < num_colonne; j++)
                         {
-                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
-                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0].ToString().ToUpper() + tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.Substring(1).ToString().ToLower();
+                            if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                    tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToUpper();
                         }
                     }
-                }
-                if (completamentoI != -1 && completamentoJ != -1)
-                { // mettiamo la maiuscola anche nei tasti del completamento aperto
-                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
-                        t.contenuto = t.contenuto[0].ToString().ToUpper() + t.contenuto.Substring(1).ToString().ToLower();
-                }
-            }
-            else
-            { // allora dobbiamo far tornare i tasti normali
-                for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
-                {
-                    for (int j = 0; j < num_colonne; j++)
-                    {
-                        if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
-                        {
-                            tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
-                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToLower();
-                        }
+                    if (completamentoI != -1 && completamentoJ != -1)
+                    { // rendiamo maiuscoli anche i tasti del completamento aperto
+                        foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                            t.contenuto = t.contenuto.ToUpper();
                     }
                 }
-                if (completamentoI != -1 && completamentoJ != -1)
-                { // facciamo tornare normali anche i tasti del completamento aperto
-                    foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
-                        t.contenuto = t.contenuto.ToLower();
+                else if (flagShift)
+                { // allora tutti i tasti devono avere la prima lettera maiuscola
+                    for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
+                    {
+                        for (int j = 0; j < num_colonne; j++)
+                        {
+                            if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                            {
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                    tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0].ToString().ToUpper() + tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.Substring(1).ToString().ToLower();
+                            }
+                        }
+                    }
+                    if (completamentoI != -1 && completamentoJ != -1)
+                    { // mettiamo la maiuscola anche nei tasti del completamento aperto
+                        foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                            t.contenuto = t.contenuto[0].ToString().ToUpper() + t.contenuto.Substring(1).ToString().ToLower();
+                    }
+                }
+                else
+                { // allora dobbiamo far tornare i tasti normali
+                    for (int i = 1; i < num_righe; i++) // partiamo dalla riga 1 perchè la riga 0 non ha lettere
+                    {
+                        for (int j = 0; j < num_colonne; j++)
+                        {
+                            if (char.IsLetter(tastiere[tastieraCorrente].matriceTasti[i, j].contenuto[0]))
+                            {
+                                tastiere[tastieraCorrente].matriceTasti[i, j].contenuto =
+                                    tastiere[tastieraCorrente].matriceTasti[i, j].contenuto.ToLower();
+                            }
+                        }
+                    }
+                    if (completamentoI != -1 && completamentoJ != -1)
+                    { // facciamo tornare normali anche i tasti del completamento aperto
+                        foreach (Tasto t in tastiere[tastieraCorrente].matriceTasti[completamentoI, completamentoJ].completamento)
+                            t.contenuto = t.contenuto.ToLower();
+                    }
                 }
             }
             tastiere[tastieraCorrente].disegnaTastiera(e.Graphics, orth_fg_col, orth_bg_col, rorth_fg_col, rorth_bg_col,
@@ -671,21 +672,21 @@ namespace Skip
                     modalita = Modalita.zeroClick;
                     panel1.MouseClick += new MouseEventHandler(panel1_MouseClick);
                     Glob.poslettere = Convert.ToInt32(Glob.poslettere_mouse);
+                    this.clickMouseToolStripMenuItem.BackColor = Color.FromName(Glob.coloreTastoAttivoMenu);
                     break;
                 case 1:
                     modalita = Modalita.unClick;
                     panel1.MouseClick += new MouseEventHandler(panel1_MouseClick);
                     coloreTastoAttivo = colconfig2;
                     Glob.poslettere = Convert.ToInt32(Glob.poslettere_mouse);
+                    this.clickMouseToolStripMenuItem1.BackColor = Color.FromName(Glob.coloreTastoAttivoMenu);
                     break;
                 case 2:
                     panel1.MouseClick += new MouseEventHandler(panel1_MouseClick);
                     Glob.poslettere = Convert.ToInt32(Glob.poslettere_touch);
                     modalita = Modalita.touch;
                     coloreTastoAttivo = colconfig1;
-                    this.clickMouseToolStripMenuItem1.BackColor = colormenu;
-                    this.clickMouseToolStripMenuItem.BackColor = colormenu;
-                    this.touchToolStripMenuItem1.BackColor = colormenuattivo;
+                    this.touchToolStripMenuItem1.BackColor = Color.FromName(Glob.coloreTastoAttivoMenu);
                     break;
                 default:
                     modalita = Modalita.unClick;
@@ -693,19 +694,6 @@ namespace Skip
                     coloreTastoAttivo = colconfig2;
                     break;
             }
-
-            if (modalita != Modalita.touch)
-                if (Glob.click == 1)
-                {
-
-                    this.clickMouseToolStripMenuItem1.BackColor = colormenuattivo;
-                    this.clickMouseToolStripMenuItem.BackColor = colormenu;
-                }
-                else
-                {
-                    this.clickMouseToolStripMenuItem.BackColor = colormenuattivo;
-                    this.clickMouseToolStripMenuItem1.BackColor = colormenu;
-                }
             TopMost = true;
 
             if (chiudi == true)
@@ -718,11 +706,14 @@ namespace Skip
         //	controllare lo stato di tutti i tasti presenti nella tastiera
         // -------------------------------------------------
         void timer1_Elapsed(object sender, ElapsedEventArgs e)
-        {  // l'unica cosa da fare quando il timer1 "scade" è aprire il menu completamento del tasto
-            if (tastiere[tastieraCorrente].matriceTasti[oldI, oldJ].haCompletamento)
+        {
+            timer1.Stop();
+            // l'unica cosa da fare quando il timer1 "scade" è aprire il menu completamento del tasto
+            if (modalita != Modalita.touch && tastiere[tastieraCorrente].matriceTasti[oldI, oldJ].haCompletamento)
             { // allora dobbiamo mostrare il suo menu di completamento
                 completamentoI = oldI; // sarà poi la funzione che disegna la tastiera ad occuparsi di disegnarlo
                 completamentoJ = oldJ;
+                flagChange = true;
                 Invoke(new MethodInvoker(delegate { panel1.Refresh(); })); // fa ridisegnare la tastiera
                 // (usiamo l'invoke per far sì che il refresh venga chiamato nel giusto thread, altrimenti lancerebbe un'eccezione)
             }
@@ -735,14 +726,27 @@ namespace Skip
 
         void timer2_Elapsed(object sender, ElapsedEventArgs e)
         {
-          // TODO
+            timer2.Stop();
+            // quando il timer 2 "scade" bisogna scrivere in uscita il tasto del menu completamento premuto
+            if (modalita == Modalita.zeroClick && aggancio != handleTastiera) // il controllo della modalità è superfluo, ma non si sa mai (se il timer 2 è attivo siamo per forza in 0-click)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    SendKeys.Send(oldCompl);
+                }));
+                flagShift = false;
+                flagChange = true;
+                num_ultima_sillaba = oldCompl.Length;
+                completamentoI = -1; // chiudiamo il menu
+                completamentoJ = -1;
+                Invoke(new MethodInvoker(delegate { panel1.Refresh(); })); // fa ridisegnare la tastiera
+                // (usiamo l'invoke per far sì che il refresh venga chiamato nel giusto thread, altrimenti lancerebbe un'eccezione)
+            }
         }
 
 
         private void panel1_MouseMove(object sender, MouseEventArgs e)
         {
-            int savedI = 0;
-            int savedJ = 0;
             bool posValida = false;
             if (completamentoI == -1 && completamentoJ == -1)
             { // cerchiamo tra i tasti normali, non c'è un menu completamento attivo
@@ -757,6 +761,13 @@ namespace Skip
                           // - siamo su un nuovo tasto
                             if (oldI != i || oldJ != j)
                             { // siamo su un tasto diverso dall'ultima volta
+                                //tastiere[tastieraCorrente].matriceTasti[i, j].stato = Tasto.Stato.Attivo; // coloriamo il tasto su cui siamo sopra
+                                //tastiere[tastieraCorrente].matriceTasti[oldI, oldJ].stato = Tasto.Stato.Inattivo; // facciamo tornare quello vecchio al colore di default
+                                //tastiere[tastieraCorrente].matriceTasti[prima_riga, j].stato = Tasto.Stato.Attivo; // coloriamo il tasto corrispondente della colonna ortogonale
+                                //tastiere[tastieraCorrente].matriceTasti[i, prima_colonna].stato = Tasto.Stato.Attivo; // coloriamo il tasto corrispondente della riga ortogonale
+                                //tastiere[tastieraCorrente].matriceTasti[prima_riga, oldJ].stato = Tasto.Stato.Inattivo; // decoloriamo il tasto vecchio della colonna ortogonale
+                                //tastiere[tastieraCorrente].matriceTasti[oldI, prima_colonna].stato = Tasto.Stato.Inattivo; // decoloriamo il tasto vecchio della riga ortogonale
+                                //panel1.Refresh(); // così funzionerebbe, ma troppi refresh!
                                 oldI = i;
                                 oldJ = j;
                                 timer1.Stop();
@@ -764,8 +775,6 @@ namespace Skip
                             }
                             // se siamo sullo stesso tasto di prima non dobbiamo fare niente (il timer starà andando avanti)
                             posValida = true;
-                            savedI = i;
-                            savedJ = j;
                             break;
                         }
                     }
@@ -781,6 +790,18 @@ namespace Skip
                 {
                     if (t.perimetro.IsVisible(e.Location) || t.perimetro.IsOutlineVisible(e.Location, new Pen(Color.Black, 1))) // IsOutlineVisible serve perchè altrimenti dava problemi quando il mouse si trovava esattamente sul bordo tra due tasti adiacenti
                     { // il mouse è sopra uno dei tasti del menu completamento
+                        timer1.Stop();
+                        // se siamo in modalità 1-click allora non serve fare più niente
+                        // se invece siamo in modalità 0-click dobbiamo far partire il timer 2
+                        if (modalita == Modalita.zeroClick)
+                        {
+                            if (oldCompl != t.contenuto)
+                            { // siamo su un tasto del completamento diverso dell'ultima volta che è stata chiamata questa funzione
+                                oldCompl = t.contenuto;
+                                timer2.Stop();
+                                timer2.Start();
+                            }
+                        }
                         sopraCompletamento = true;
                         break;
                     }
@@ -809,8 +830,6 @@ namespace Skip
                                 }
                                 // se siamo sullo stesso tasto di prima non dobbiamo fare niente (il timer starà andando avanti)
                                 posValida = true;
-                                savedI = i;
-                                savedJ = j;
                                 break;
                             }
                         }
@@ -818,8 +837,6 @@ namespace Skip
                             break;
                     }
                 }
-                else // se il mouse è sopra il menu completamento allora non serve il timer (in modalità 1-click)
-                    timer1.Stop();
             }
         }
 
@@ -861,6 +878,7 @@ namespace Skip
                         if (tastoCliccato == "LOCK")
                         {
                             flagLock = !flagLock; // invertiamo il flag
+                            flagChange = true;
                             panel1.Refresh();
                         }
                         else if (tastoCliccato == "TAB")
@@ -873,6 +891,7 @@ namespace Skip
                         {
                             SendKeys.Send(tastoCliccato);
                             flagShift = false;
+                            flagChange = true;
                             num_ultima_sillaba = tastoCliccato.Length;
                             panel1.Refresh();
                         }
@@ -897,6 +916,7 @@ namespace Skip
                         {
                             SendKeys.Send(tastoCliccato);
                             flagShift = false;
+                            flagChange = true;
                             num_ultima_sillaba = tastoCliccato.Length;
                             completamentoI = -1; // chiudiamo il menu
                             completamentoJ = -1;
@@ -921,6 +941,7 @@ namespace Skip
                     {
                         case "SHIFT":
                             flagShift = true;
+                            flagChange = true;
                             panel1.Refresh();
                             break;
                         case "FR":
