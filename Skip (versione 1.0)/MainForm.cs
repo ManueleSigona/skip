@@ -68,7 +68,8 @@ namespace Skip
         List<Tastiera> tastiere = new List<Tastiera>(); // le tastiere
         bool completamentoOrt = true; // se usare o no il completamento ortogonale
         int num_completamento; // il numero di tasti da inserire nel completamento ortogonale
-
+        List<String[]> terziCompletamenti = new List<string[]>();// sicuramente c'è un metodo più efficiente
+        int terzoCompIndex = 0;
         int tastieraCorrente = 0; // la tastiera corrente da visualizzare
         int completamentoI = -1, completamentoJ = -1; // di quale tasto mostrare il completamento
         bool flagShift = false;
@@ -596,9 +597,9 @@ namespace Skip
                         }
                         // adesso bisogna leggere cosa mettere nei menu di completamento ortogonale
                         // (probabilmente verrà comodo gestire tutto tramite la classe Tastiera)
-                        if (cont > (14 + num_tastiere) && cont < (15 + 2*num_tastiere))
-                        {
-                            try
+                        if (cont > (14 + num_tastiere) && cont < (15 + 2 * num_tastiere))
+                            {
+                                try
                             {
                                 for (int i = 0; i < num_righe_complOrt; i++) // leggiamo riga per riga la tastiera
                                 {
@@ -609,10 +610,18 @@ namespace Skip
                                         if ((j != 1 && i == 0) || i > 0) // bisogna leggere la riga successiva (tranne la prima volta)
                                         {
                                             do
+                                            
                                                 rigaLetta = leggi.ReadLine(); // leggi la prossima riga valida
-                                            while (rigaLetta.StartsWith("#") || rigaLetta.StartsWith(";") || rigaLetta.Length == 0);
-                                        }
+                                                while (rigaLetta.StartsWith("#") || rigaLetta.StartsWith(";") || rigaLetta.Length == 0) ;
+                                            
+                                            }
+                                        
                                         string[] tastiOrtLetti = rigaLetta.Split('\t');
+                                        terzoCompIndex++;
+                                        if (terzoCompIndex > 10)//non voglio inserire i completamenti del secondo livello
+                                        { 
+                                            terziCompletamenti.Add(tastiOrtLetti);
+                                        }
                                         // istanzio nuovo complet ort e lo assegno al tasto corrispondente
                                         if (tastiOrtLetti.Length > 1) // se il completamento è definito per questo tasto
                                         {
@@ -628,6 +637,7 @@ namespace Skip
                                 err = true;
                             }
                         }
+
                     }
                 }
                 this.Refresh(); //refresh finestra per far si che compaiano tutti i tasti subito! 
