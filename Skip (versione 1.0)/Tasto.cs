@@ -1,7 +1,10 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Skip
 {
@@ -110,22 +113,88 @@ namespace Skip
             // per calcolare la posizione dei nuovi tasti usiamo la posizione del tasto corrente della tastiera
             completamento.Add(new Tasto(relPosX - 1, relPosY - 1, tasti[0], tastiera.matriceTasti[relPosX - 1, relPosY - 1].xCentro,
                 tastiera.matriceTasti[relPosX - 1, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 1
+            AggiungiTerzoLivello(tasti[0]);
+
             completamento.Add(new Tasto(relPosX - 1, relPosY, tasti[1], tastiera.matriceTasti[relPosX - 1, relPosY].xCentro,
                 tastiera.matriceTasti[relPosX - 1, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 2
+            AggiungiTerzoLivello(tasti[1]);
+
             completamento.Add(new Tasto(relPosX - 1, relPosY + 1, tasti[2], tastiera.matriceTasti[relPosX - 1, relPosY + 1].xCentro,
                 tastiera.matriceTasti[relPosX - 1, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 3
+            AggiungiTerzoLivello(tasti[2]);
+
             completamento.Add(new Tasto(relPosX, relPosY - 1, tasti[3], tastiera.matriceTasti[relPosX, relPosY - 1].xCentro,
                 tastiera.matriceTasti[relPosX, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 4
+            AggiungiTerzoLivello(tasti[3]);
+
             completamento.Add(new Tasto(relPosX, relPosY, tasti[4], tastiera.matriceTasti[relPosX, relPosY].xCentro,
                 tastiera.matriceTasti[relPosX, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 5
+            AggiungiTerzoLivello(tasti[4]);
+
             completamento.Add(new Tasto(relPosX, relPosY + 1, tasti[5], tastiera.matriceTasti[relPosX, relPosY + 1].xCentro,
                 tastiera.matriceTasti[relPosX, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 6
+            AggiungiTerzoLivello(tasti[5]);
+
             completamento.Add(new Tasto(relPosX + 1, relPosY - 1, tasti[6], tastiera.matriceTasti[relPosX + 1, relPosY - 1].xCentro,
                 tastiera.matriceTasti[relPosX + 1, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 7
+            AggiungiTerzoLivello(tasti[6]);
+
             completamento.Add(new Tasto(relPosX + 1, relPosY, tasti[7], tastiera.matriceTasti[relPosX + 1, relPosY].xCentro,
                 tastiera.matriceTasti[relPosX + 1, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 8
+            AggiungiTerzoLivello(tasti[7]);
+
             completamento.Add(new Tasto(relPosX + 1, relPosY + 1, tasti[8], tastiera.matriceTasti[relPosX + 1, relPosY + 1].xCentro,
                 tastiera.matriceTasti[relPosX + 1, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 9
+            AggiungiTerzoLivello(tasti[8]);
+        }
+
+       
+        public void AggiungiTerzoLivello(string tastosel)
+        {
+            string path = "..\\..\\..\\" + "configurazione.cfg";
+            StreamReader leggi = new StreamReader(File.OpenRead(path));
+            string rigaLetta;
+            while (!leggi.EndOfStream)
+            {
+                do
+                {
+                    rigaLetta = leggi.ReadLine();
+                }
+                while (!rigaLetta.StartsWith("#" + tastosel));
+                System.Diagnostics.Debug.WriteLine(tastosel);
+                rigaLetta = leggi.ReadLine();
+                string[] tasti = rigaLetta.Split('\t');
+
+                completamento.Add(new Tasto(relPosX - 1, relPosY - 1, tasti[0], tastiera.matriceTasti[relPosX - 1, relPosY - 1].xCentro,
+                            tastiera.matriceTasti[relPosX - 1, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 1
+
+                completamento.Add(new Tasto(relPosX - 1, relPosY, tasti[1], tastiera.matriceTasti[relPosX - 1, relPosY].xCentro,
+                    tastiera.matriceTasti[relPosX - 1, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 2
+
+                completamento.Add(new Tasto(relPosX - 1, relPosY + 1, tasti[2], tastiera.matriceTasti[relPosX - 1, relPosY + 1].xCentro,
+                    tastiera.matriceTasti[relPosX - 1, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 3
+
+                completamento.Add(new Tasto(relPosX, relPosY - 1, tasti[3], tastiera.matriceTasti[relPosX, relPosY - 1].xCentro,
+                    tastiera.matriceTasti[relPosX, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 4
+
+                completamento.Add(new Tasto(relPosX, relPosY, tasti[4], tastiera.matriceTasti[relPosX, relPosY].xCentro,
+                    tastiera.matriceTasti[relPosX, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 5
+
+                completamento.Add(new Tasto(relPosX, relPosY + 1, tasti[5], tastiera.matriceTasti[relPosX, relPosY + 1].xCentro,
+                    tastiera.matriceTasti[relPosX, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 6
+
+                completamento.Add(new Tasto(relPosX + 1, relPosY - 1, tasti[6], tastiera.matriceTasti[relPosX + 1, relPosY - 1].xCentro,
+                    tastiera.matriceTasti[relPosX + 1, relPosY - 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 7
+
+                completamento.Add(new Tasto(relPosX + 1, relPosY, tasti[7], tastiera.matriceTasti[relPosX + 1, relPosY].xCentro,
+                    tastiera.matriceTasti[relPosX + 1, relPosY].yCentro, TipoTasto.Completamento, tastiera)); // tasto 8
+
+                completamento.Add(new Tasto(relPosX + 1, relPosY + 1, tasti[8], tastiera.matriceTasti[relPosX + 1, relPosY + 1].xCentro,
+                    tastiera.matriceTasti[relPosX + 1, relPosY + 1].yCentro, TipoTasto.Completamento, tastiera)); // tasto 9
+                leggi.Close();
+                Task.Delay(250);
+                return;
+            }
         }
     }
 }
